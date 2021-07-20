@@ -33,7 +33,7 @@ module "lambda-scheduler" {
 
 the DNS name of the RDS database.
 
-### 
+### nlb_tg_arn
 
 Network Log Balancer Target Group arn.
  
