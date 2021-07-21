@@ -28,7 +28,7 @@ resource "aws_lambda_permission" "allow_cloudwatch_80" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.populate_nlb_tg_with_rds_updater_80.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.cron_minute.arn
+  source_arn    = aws_cloudwatch_event_rule.populate_nlb_tg_with_rds_event.arn
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_443" {
@@ -36,7 +36,7 @@ resource "aws_lambda_permission" "allow_cloudwatch_443" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.populate_nlb_tg_with_rds_updater_443.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.cron_minute.arn
+  source_arn    = aws_cloudwatch_event_rule.populate_nlb_tg_with_rds_event.arn
 }
 
 
@@ -94,7 +94,7 @@ EOF
 }
 
 resource "aws_iam_role" "populate_nlb_tg_with_rds_lambda" {
-  name        = "static-lb-lambda"
+  name        = "populate-nlb-tg-with-rds-lambda"
   description = "Managed by Terraform"
 
   assume_role_policy = <<EOF
