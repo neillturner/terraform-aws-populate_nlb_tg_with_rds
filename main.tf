@@ -119,7 +119,7 @@ data "archive_file" "lambda_function" {
 
 # AWS Lambda function
 resource "aws_lambda_function" "static_lb_updater_80" {
-  filename         = data.archive_file.aws-scheduler.output_path
+  filename         = data.archive_file.lambda_function.output_path
   function_name    = "static_lb_updater_80"
   role             = aws_iam_role.static_lb_lambda.arn
   handler          = "populate_nlb_tg_with_rds.handler"
@@ -139,7 +139,7 @@ resource "aws_lambda_function" "static_lb_updater_80" {
 
 
 resource "aws_lambda_function" "static_lb_updater_443" {
-  filename         = data.archive_file.aws-scheduler.output_path
+  filename         = data.archive_file.lambda_function.output_path
   function_name    = "static_lb_updater_443"
   role             = aws_iam_role.static_lb_lambda.arn
   handler          = "populate_nlb_tg_with_rds.handler"
@@ -152,7 +152,7 @@ resource "aws_lambda_function" "static_lb_updater_443" {
     variables = {
       RDS_DNS_NAME                      = var.rds_dns_name
       NLB_TG_ARN                        = var.nlb_tg_arn
-      MAX_LOOKUP_PER_INVOCATION         = 10
+      MAX_LOOKUP_PER_INVOCATION         = var.max_lookup_per_invocation
     }
   }
 }
