@@ -6,23 +6,23 @@ resource "aws_cloudwatch_event_rule" "cron_minute" {
   is_enabled          = true
 }
 
-resource "aws_cloudwatch_event_target" "static_lb_updater_80" {
+resource "aws_cloudwatch_event_target" "populate_nlb_tg_with_rds_updater_80" {
   rule      = aws_cloudwatch_event_rule.cron_minute.name
   target_id = "TriggerStaticPort80"
-  arn       = aws_lambda_function.static_lb_updater_80.arn
+  arn       = aws_lambda_function.populate_nlb_tg_with_rds_updater_80.arn
 }
 
-resource "aws_cloudwatch_event_target" "static_lb_updater_443" {
+resource "aws_cloudwatch_event_target" "populate_nlb_tg_with_rds_updater_443" {
   rule      = aws_cloudwatch_event_rule.cron_minute.name
   target_id = "TriggerStaticPort443"
-  arn       = aws_lambda_function.static_lb_updater_443.arn
+  arn       = aws_lambda_function.populate_nlb_tg_with_rds_updater_443.arn
 }
 
 # permissions to each Lambda function to allow them to be triggered by Cloudwatch
 resource "aws_lambda_permission" "allow_cloudwatch_80" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.static_lb_updater_80.function_name
+  function_name = aws_lambda_function.populate_nlb_tg_with_rds_updater_80.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.cron_minute.arn
 }
@@ -30,16 +30,16 @@ resource "aws_lambda_permission" "allow_cloudwatch_80" {
 resource "aws_lambda_permission" "allow_cloudwatch_443" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.static_lb_updater_443.function_name
+  function_name = aws_lambda_function.populate_nlb_tg_with_rds_updater_443.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.cron_minute.arn
 }
 
 
 # IAM Role for Lambda function
-resource "aws_iam_role_policy" "static_lb_lambda" {
+resource "aws_iam_role_policy" "populate_nlb_tg_with_rds_lambda" {
   name = "static-lb-lambda"
-  role = aws_iam_role.static_lb_lambda.id
+  role = aws_iam_role.populate_nlb_tg_with_rds_lambda.id
 
   policy = <<EOF
 {
@@ -89,7 +89,7 @@ resource "aws_iam_role_policy" "static_lb_lambda" {
 EOF
 }
 
-resource "aws_iam_role" "static_lb_lambda" {
+resource "aws_iam_role" "populate_nlb_tg_with_rds_lambda" {
   name        = "static-lb-lambda"
   description = "Managed by Terraform"
 
@@ -118,10 +118,10 @@ data "archive_file" "lambda_function" {
 }
 
 # AWS Lambda function
-resource "aws_lambda_function" "static_lb_updater_80" {
+resource "aws_lambda_function" "populate_nlb_tg_with_rds_updater_80" {
   filename         = data.archive_file.lambda_function.output_path
-  function_name    = "static_lb_updater_80"
-  role             = aws_iam_role.static_lb_lambda.arn
+  function_name    = "populate_nlb_tg_with_rds_updater_80"
+  role             = aws_iam_role.populate_nlb_tg_with_rds_lambda.arn
   handler          = "populate_nlb_tg_with_rds.handler"
   source_code_hash = data.archive_file.lambda_function.output_base64sha256
   runtime          = "python3.8"
@@ -138,10 +138,10 @@ resource "aws_lambda_function" "static_lb_updater_80" {
 }
 
 
-resource "aws_lambda_function" "static_lb_updater_443" {
+resource "aws_lambda_function" "populate_nlb_tg_with_rds_updater_443" {
   filename         = data.archive_file.lambda_function.output_path
-  function_name    = "static_lb_updater_443"
-  role             = aws_iam_role.static_lb_lambda.arn
+  function_name    = "populate_nlb_tg_with_rds_updater_443"
+  role             = aws_iam_role.populate_nlb_tg_with_rds_lambda.arn
   handler          = "populate_nlb_tg_with_rds.handler"
   source_code_hash = data.archive_file.lambda_function.output_base64sha256
   runtime          = "python3.8"
