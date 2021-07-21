@@ -63,8 +63,7 @@ resource "aws_iam_role_policy" "static_lb_lambda" {
         "elasticloadbalancing:DeregisterTargets"
       ],
       "Resource": [
-        "${aws_lb_target_group.app_public_80.arn}",
-        "${aws_lb_target_group.app_public_443.arn}"
+        "${var.nlb_tg_arn}"
       ],
       "Effect": "Allow",
       "Sid": "ChangeTargetGroups"
