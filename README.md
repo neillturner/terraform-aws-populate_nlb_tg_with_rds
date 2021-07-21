@@ -19,8 +19,8 @@ This module depends on a correctly configured [AWS Provider](https://www.terrafo
 ## Usage
 
 ```
-module "lambda-scheduler" {
-  source = "neillturner/lambda-scheduler/aws"
+module "populate_nlb_tg_with_rds" {
+  source = "neillturner/populate_nlb_tg_with_rds/aws"
   version = "0.x.0"
   rds_dns_name = "my-db.ctjuxtulczykq.eu-west-1.rds.amazonaws.com"
   nlb_tg_arn = "arn:aws:elasticloadbalancing:eu-west-1:01234567890:targetgroup/mytargetgroup/aabbccddee0044332211"
@@ -39,7 +39,9 @@ Network Log Balancer Target Group arn.
  
 ### max_lookup_per_invocation
 
-Maximum number of invocations of DNS lookup.
+Maximum number of invocations of DNS lookup. 
+
+**Note:** This is a string value even though it is a number as it sets an environment variable
 
 
 ## References 
