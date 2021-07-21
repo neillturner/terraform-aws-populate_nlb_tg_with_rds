@@ -1,20 +1,24 @@
 # Cloudwatch event rule
-
-resource "aws_cloudwatch_event_rule" "cron_minute" {
-  name                = "cron-minute"
-  schedule_expression = "rate(5 minute)"
-  is_enabled          = true
+resource "aws_cloudwatch_event_rule" "populate_nlb_tg_with_rds_event" {
+  name                = "populate-nlb-tg-with-rds-event"
+  description         = "populate_nlb_tg_with_rds-event"
+  schedule_expression = var.schedule_expression
+  depends_on          = [
+                  aws_lambda_function.populate_nlb_tg_with_rds_updater_80,
+                  aws_lambda_function.populate_nlb_tg_with_rds_updater_443
+                ]
 }
 
-resource "aws_cloudwatch_event_target" "populate_nlb_tg_with_rds_updater_80" {
-  rule      = aws_cloudwatch_event_rule.cron_minute.name
-  target_id = "TriggerStaticPort80"
+# Cloudwatch event target
+resource "aws_cloudwatch_event_target" "populate_nlb_tg_with_rds_event_lambda_80_target" {
+  target_id = "populate-nlb-tg-with-rds-event-lambda-80-target"
+  rule      = aws_cloudwatch_event_rule.populate_nlb_tg_with_rds_event.name
   arn       = aws_lambda_function.populate_nlb_tg_with_rds_updater_80.arn
 }
 
-resource "aws_cloudwatch_event_target" "populate_nlb_tg_with_rds_updater_443" {
-  rule      = aws_cloudwatch_event_rule.cron_minute.name
-  target_id = "TriggerStaticPort443"
+resource "aws_cloudwatch_event_target" "populate_nlb_tg_with_rds_event_lambda_443_target" {
+  target_id = "populate-nlb-tg-with-rds-event-lambda-443-target"
+  rule      = aws_cloudwatch_event_rule.populate_nlb_tg_with_rds_event.name
   arn       = aws_lambda_function.populate_nlb_tg_with_rds_updater_443.arn
 }
 
