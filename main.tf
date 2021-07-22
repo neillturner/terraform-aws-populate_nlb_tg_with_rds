@@ -154,7 +154,7 @@ resource "aws_lambda_function" "populate_nlb_tg_with_rds_updater_443" {
 
   environment {
     variables = {
-      RDS_DNS_NAME                      = var.rds_dns_name
+      RDS_DNS_NAME                      = element(split(":", var.rds_dns_name), 0)
       NLB_TG_ARN                        = var.nlb_tg_arn
       MAX_LOOKUP_PER_INVOCATION         = var.max_lookup_per_invocation
     }

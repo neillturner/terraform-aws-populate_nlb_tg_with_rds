@@ -1,8 +1,10 @@
 import boto3
+from botocore.exceptions import ClientError
 
-import sys, os, json, logging, datetime, time
+import sys, os, json, logging, time
 import dns.resolver
 from collections import defaultdict
+from datetime    import datetime
 
 # Timeout on one NS
 DNS_RESOLVER_TIMEOUT = 1
@@ -30,7 +32,7 @@ def init():
 
     global elbv2
     logger.info("-----> Connecting to region \"%s\"", aws_region)
-    elbv2 = boto3.resource("elbv2", region_name=aws_region)
+    elbv2 = boto3.client("elbv2", region_name=aws_region)
     logger.info("-----> Connected to region \"%s\"", aws_region)
 
 def debugout(module, data):
@@ -110,38 +112,38 @@ def dns_lookup_with_retry(domain_name, record_type, total_retry_count, dns_serve
         attempt += 1
     return dns_lookup_result_set
 
-def get_elb_ip_from_dns(elb_dns_name, record_type, total_retry_count):
+def get_node_ip_from_dns(dns_name, record_type, total_retry_count):
     """
-    Get RDS node IP through DNS lookup
-    :param elb_dns_name: DNS name of RDS
+    Get node IP through DNS lookup
+    :param dns_name: DNS name of RDS
     :param record_type: DNS record type. e.g. A or AAAA
     :param total_retry_count: Total DNS lookup count
-    :return: a set of ELB node IP addresses
+    :return: a set of node IP addresses
     """
 
-    # Get ELB IP through DNS lookup
-    elb_ip_set = dns_lookup_with_retry(
-        elb_dns_name, record_type, total_retry_count, authoritative_server_ip_list
+    # Get IP through DNS lookup
+    node_ip_set = dns_lookup_with_retry(
+        dns_name, record_type, total_retry_count
     )
-    return elb_ip_set
+    return node_ip_set
 
 def get_ip_from_dns():
     """
-    Get RDS node IP address through DNS lookup. Exit if no IP found in the DNS
-    :return: a set of RDS node IP addresses
+    Get node IP address through DNS lookup. Exit if no IP found in the DNS
+    :return: a set of node IP addresses
     """
-    ip_from_dns_set = get_rds_ip_from_dns(
+    ip_from_dns_set = get_node_ip_from_dns(
         rds_dns_name, "A", max_lookup_per_invocation
     )
     logger.info(
-        f"RDS IPs from DNS lookup: {ip_from_dns_set}. Total IP count: {len(ip_from_dns_set)}"
+        f"Node IPs from DNS lookup: {ip_from_dns_set}. Total IP count: {len(ip_from_dns_set)}"
     )
 
-    # Check if there is ALB no IP in the DNS. If so, exit from the current Lambda invocation
+    # Check if there is no IP in the DNS. If so, exit from the current Lambda invocation
     try:
         error_message = (
-            f"No IP found from DNS for RDS - {rds_dns_name}. "
-            f"The Lambda function will not proceed with making changes to the NLB target group - {nlb_tg_arn}"
+            f"No IP found from DNS for - {rds_dns_name}. "
+            f"The Lambda function will not proceed with making changes to the target group - {nlb_tg_arn}"
         )
         precondition(ip_from_dns_set, error_message)
         return ip_from_dns_set
@@ -205,6 +207,8 @@ def get_ip_target_list_by_target_group_arn(tg_arn):
 # Main function. Entrypoint for Lambda
 def handler(event, context):
 
+    init()
+    
     # ---- Step 1 -----
     # Get IP from DNS
     logger.info(">>>>Step-1: Get IPs from DNS<<<<")
@@ -220,10 +224,11 @@ def handler(event, context):
         f"RDS IPs from target group ({nlb_tg_arn}): {ip_from_target_group_set}. "
         f"Total IP count: {len(ip_from_target_group_set)}"
     )
-
+    
+    now = datetime.now()
     active_ip_from_dns_meta_data = {
         "RDSName": rds_dns_name,
-        "TimeStamp": datetime.strftime((datetime.utcnow()), "%Y-%m-%d %H:%M:%S"),
+        "TimeStamp": now.strftime("%Y-%m-%d %H:%M:%S"),
         "IPList": list(ip_from_dns_set),
         "IPCount": len(ip_from_dns_set),
     }
@@ -232,13 +237,13 @@ def handler(event, context):
     )
 
     logger.info(">>>>Step-3: compare DNS IP address with IP Address in target group<<<<")
+    logger.info(f"ip_from_target_group_set : {ip_from_target_group_set}")
+    logger.info( f"ip_from_dns_set : {ip_from_dns_set}")
     if len(ip_from_dns_set) == 0:
-        logger.info( 
-            f"No DNS Entry found for : {rds_dns_name}"
-        )       
-    elif ip_from_dns_set[0] not in ip_from_target_group_set
-        register_target(nlb_tg_arn, ip_from_dns_set)
-        deregister_target(nlb_tg_arn, ip_from_target_group_set)
+        logger.info(f"No DNS Entry found for : {rds_dns_name}")
+    elif next(iter(ip_from_dns_set)) not in ip_from_target_group_set:
+        register_target(nlb_tg_arn, list(ip_from_dns_set))
+        deregister_target(nlb_tg_arn, list(ip_from_target_group_set))
 
 # Manual invocation of the script (only used for testing)
 if __name__ == "__main__":
