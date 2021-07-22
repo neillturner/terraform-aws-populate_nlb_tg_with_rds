@@ -239,11 +239,18 @@ def handler(event, context):
     logger.info(">>>>Step-3: compare DNS IP address with IP Address in target group<<<<")
     logger.info(f"ip_from_target_group_set : {ip_from_target_group_set}")
     logger.info( f"ip_from_dns_set : {ip_from_dns_set}")
+    targetIds = list(ip_from_dns_set)
     if len(ip_from_dns_set) == 0:
         logger.info(f"No DNS Entry found for : {rds_dns_name}")
-    elif next(iter(ip_from_dns_set)) not in ip_from_target_group_set:
-        register_target(nlb_tg_arn, list(ip_from_dns_set))
-        deregister_target(nlb_tg_arn, list(ip_from_target_group_set))
+    elif targetIds[0] not in ip_from_target_group_set:
+        targets_list = [dict(Id=target_id) for target_id in targetIds]
+        register_target(nlb_tg_arn, targets_list)
+        if len(ip_from_target_group_set) > 0:
+            oldtargetIds = list(ip_from_target_group_set)
+            old_targets_list = [dict(Id=target_id) for target_id in oldtargetIds]
+            deregister_target(nlb_tg_arn, old_targets_list)
+    else:
+        logger.info(f"target group already has IP : {targetIds[0]}")
 
 # Manual invocation of the script (only used for testing)
 if __name__ == "__main__":
