@@ -1,4 +1,4 @@
-# terrafrom-aws-populate_nlb_tg_with_rds
+# terraform-aws-populate_nlb_tg_with_rds
 
 Populate network load balancer target group with RDS IP address
 
