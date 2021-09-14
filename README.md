@@ -1,6 +1,6 @@
 # terraform-aws-populate_nlb_tg_with_rds
 
-Populate network load balancer target group with RDS IP address
+Populate network load balancer target group with RDS IP address. This can be in fact any DNS resolvable to an instance like redshift DNS.
 
 # Overview
 
@@ -31,7 +31,7 @@ module "populate_nlb_tg_with_rds" {
 
 ### rds_dns_name
 
-the DNS name of the RDS database.
+The DNS name of the RDS database. This can be in fact any DNS resolvable to an instance like redshift DNS.
 
 ### nlb_tg_arn
 
