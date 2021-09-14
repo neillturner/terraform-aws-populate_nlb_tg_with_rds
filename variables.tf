@@ -17,5 +17,10 @@ variable "max_lookup_per_invocation" {
 
 variable "schedule_expression" {
   default     = "cron(5 * * * ? *)"
-  description = "the aws cloudwatch event rule scheule expression that specifies when the scheduler runs. Default is 5 minuts past the hour. for debugging use 'rate(5 minutes)'. See https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html"
+  description = "the aws cloudwatch event rule schedule expression that specifies when the scheduler runs. Default is 5 minuts past the hour. for debugging use 'rate(5 minutes)'. See https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html"
+}
+
+variable "resource_name_prefix" {
+  default     = ""
+  description = "a prefix to apply to resource names created by this module."
 }
